@@ -2,7 +2,8 @@
  * The mentalist Read: watch a witness repeat a line, spot where their body
  * betrayed them (eyes, brows, mouth, throat, sweat), then decide what it means.
  */
-import { portraitSVG } from '../art/cast';
+import { portraitFromBuild, portraitSVG } from '../art/cast';
+import type { Build } from '../art/portrait';
 import { audio } from '../engine/audio';
 import { type Game, el, escapeHtml } from '../engine/game';
 import type { CharId } from '../engine/types';
@@ -10,7 +11,9 @@ import type { CharId } from '../engine/types';
 export type TellRegion = 'eyes' | 'brows' | 'mouth' | 'throat' | 'sweat';
 
 export interface ReadDef {
-  char: CharId;
+  char?: CharId;
+  /** A one-off face (generated jurors) instead of a cast member. */
+  build?: Build;
   expr?: string;
   outfit?: string;
   /** What the subject says while Ezra watches. */
@@ -39,7 +42,7 @@ export async function readTell(g: Game, def: ReadDef, opts: { retry?: boolean } 
     'div',
     'read-overlay',
     `<div class="read-rings"></div>
-     <div class="read-face"><div class="read-portrait">${portraitSVG(def.char, def.expr ?? 'neutral', def.outfit)}</div></div>
+     <div class="read-face"><div class="read-portrait">${def.build ? portraitFromBuild(def.build, def.expr ?? 'neutral') : portraitSVG(def.char ?? 'ezra', def.expr ?? 'neutral', def.outfit)}</div></div>
      <div class="read-head"><span class="read-kicker">READ</span><span class="read-title">Watch closely.</span></div>
      <div class="read-caption"></div>
      <div class="read-panel"></div>`,

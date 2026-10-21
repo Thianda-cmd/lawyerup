@@ -3,6 +3,7 @@
  */
 import type { CharId } from '../engine/types';
 import { shade } from './color';
+import { crane, jojo, kessler, nand, ortega, teo, whitfield } from './cast2';
 import { type Build, type Ctx, type ExprParams, CX, SHOULDERS, mirror, renderPortrait, suit, sym } from './portrait';
 
 // ---------------------------------------------------------------------------
@@ -475,7 +476,7 @@ const tino: Build = {
 
 // ---------------------------------------------------------------------------
 
-export const BUILDS: Record<CharId, Build> = { ezra, rosa, corvin, iris, benny, brandt, strand, judge, tino };
+export const BUILDS: Record<CharId, Build> = { ezra, rosa, corvin, iris, benny, brandt, strand, judge, tino, teo, kessler, jojo, whitfield, nand, crane, ortega };
 
 /** Per-character overrides to the shared expression sheet. */
 const OVERRIDES: Partial<Record<CharId, Record<string, ExprParams>>> = {
@@ -498,6 +499,18 @@ const OVERRIDES: Partial<Record<CharId, Record<string, ExprParams>>> = {
   brandt: {
     neutral: { brow: 'flat', eyes: 'open', mouth: 'neutral' },
   },
+  kessler: {
+    neutral: { brow: 'flat', eyes: 'half', mouth: 'smirk' },
+    friendly: { brow: 'raised', eyes: 'open', mouth: 'grin' },
+  },
+  jojo: {
+    neutral: { brow: 'raised', eyes: 'half', mouth: 'smirk' },
+  },
+  crane: {
+    neutral: { brow: 'neutral', eyes: 'half', mouth: 'smile' },
+    cold: { brow: 'flat', eyes: 'half', mouth: 'neutral' },
+    delighted: { brow: 'raised', eyes: 'happy', mouth: 'smile' },
+  },
 };
 
 export function exprFor(id: CharId, expr: string): ExprParams {
@@ -506,6 +519,11 @@ export function exprFor(id: CharId, expr: string): ExprParams {
 
 export function knownExpr(id: CharId, expr: string): boolean {
   return Boolean(OVERRIDES[id]?.[expr] ?? COMMON[expr]);
+}
+
+/** Render a portrait from an arbitrary build (e.g. a generated juror) using the shared expression sheet. */
+export function portraitFromBuild(build: Build, expr: string, outfit?: string): string {
+  return renderPortrait(build, COMMON[expr] ?? COMMON.neutral, outfit);
 }
 
 export function portraitSVG(id: CharId, expr: string, outfit?: string): string {

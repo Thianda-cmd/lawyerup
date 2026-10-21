@@ -437,3 +437,143 @@ export async function verdictReport(g: Game, opts: { title: string; verdict: str
     box.remove();
   }
 }
+
+// ---------------------------------------------------------------------------
+// Motions: build a written argument from the grounds you established
+
+export interface MotionArg {
+  id: string;
+  label: string;
+  detail: string;
+  /** Whether this argument is actually supported by what came out at the hearing. */
+  valid: (g: Game) => boolean;
+}
+
+export async function argueMotion(g: Game, opts: { title: string; prompt: string; args: MotionArg[]; pick: number }): Promise<{ good: string[]; bad: string[] }> {
+  g.hideDialogue();
+  const box = el(
+    'div',
+    'motion no-advance',
+    `<div class="motion-panel">
+       <div class="motion-kicker">DEFENSE MOTION</div>
+       <div class="motion-title">${escapeHtml(opts.title)}</div>
+       <div class="motion-prompt">${escapeHtml(opts.prompt)}</div>
+       <div class="motion-args">${opts.args
+         .map((a) => `<button class="motion-arg" data-id="${a.id}"><b>${escapeHtml(a.label)}</b><small>${escapeHtml(a.detail)}</small></button>`)
+         .join('')}</div>
+       <div class="motion-foot"><span class="motion-count">0 / ${opts.pick} selected</span><button class="btn primary" data-file disabled>File the motion</button></div>
+     </div>`,
+  );
+  g.layers.ui.appendChild(box);
+  const picked = new Set<string>();
+  const shownAt = performance.now();
+  try {
+    await g.waitFor<void>((done) => {
+      const onClick = (e: MouseEvent) => {
+        if (performance.now() - shownAt < 400) return;
+        const b = (e.target as HTMLElement).closest<HTMLButtonElement>('button');
+        if (!b) return;
+        if (b.hasAttribute('data-file')) {
+          audio.sfx('stamp');
+          return done();
+        }
+        const id = b.dataset.id!;
+        if (picked.has(id)) picked.delete(id);
+        else if (picked.size < opts.pick) picked.add(id);
+        audio.sfx('click');
+        box.querySelectorAll<HTMLButtonElement>('.motion-arg').forEach((x) => x.classList.toggle('on', picked.has(x.dataset.id!)));
+        box.querySelector('.motion-count')!.textContent = `${picked.size} / ${opts.pick} selected`;
+        (box.querySelector('[data-file]') as HTMLButtonElement).disabled = picked.size === 0;
+      };
+      box.addEventListener('click', onClick);
+      return () => box.removeEventListener('click', onClick);
+    });
+  } finally {
+    box.remove();
+  }
+  const chosen = opts.args.filter((a) => picked.has(a.id));
+  return { good: chosen.filter((a) => a.valid(g)).map((a) => a.id), bad: chosen.filter((a) => !a.valid(g)).map((a) => a.id) };
+}
+
+// ---------------------------------------------------------------------------
+// Plea negotiation: wear the offer down with leverage, read the prosecutor's floor
+
+export interface Leverage {
+  id: string;
+  label: string;
+  hint: string;
+  available: (g: Game) => boolean;
+  script: Script;
+}
+
+export interface NegotiationDef {
+  /** Offers from worst to best. The last one is only reachable after a successful read. */
+  offers: { charge: string; sentence: string; line: string }[];
+  leverages: Leverage[];
+  read: ReadDef;
+  readSuccess: Script;
+  readFail?: Script;
+}
+
+export async function negotiate(g: Game, def: NegotiationDef): Promise<{ accepted: boolean; level: number }> {
+  let level = 0;
+  let readDone = false;
+  let readOk = false;
+  const used = new Set<string>();
+  const cap = () => (readOk ? def.offers.length - 1 : def.offers.length - 2);
+  const card = el('div', 'offer-card no-advance');
+  const renderCard = () => {
+    const o = def.offers[level];
+    card.innerHTML = `<div class="oc-kicker">THE PEOPLE'S OFFER</div><div class="oc-charge">${escapeHtml(o.charge)}</div><div class="oc-sentence">${escapeHtml(o.sentence)}</div>
+      <div class="oc-ladder">${def.offers.map((_, i) => `<i class="${i <= level ? 'on' : ''} ${i === def.offers.length - 1 ? 'floor' : ''}"></i>`).join('')}</div>`;
+  };
+  renderCard();
+  g.layers.hud.appendChild(card);
+  try {
+    await g.say('strand', def.offers[0].line, { expr: 'cold' });
+    for (;;) {
+      const choices = [
+        ...def.leverages.map((l) => ({
+          label: l.label,
+          value: `lev:${l.id}`,
+          tag: 'LEVERAGE',
+          hint: l.available(g) ? l.hint : 'You need more from the investigation to use this.',
+          disabled: used.has(l.id) || !l.available(g),
+          done: used.has(l.id),
+        })),
+        ...(readDone ? [] : [{ label: 'Read Strand', value: 'read', tag: 'READ', hint: 'Find out how much room she really has.' }]),
+        { label: `Take the deal: ${def.offers[level].charge}, ${def.offers[level].sentence}`, value: 'accept', tag: 'RISKY' },
+        { label: 'Reject the deal. We go to trial.', value: 'reject', tag: 'HONEST' },
+      ];
+      const v = await g.choose(choices, { prompt: 'Strand slides the folder across the glass. What do I push with?' });
+      g.hideDialogue();
+      if (v === 'accept') return { accepted: true, level };
+      if (v === 'reject') return { accepted: false, level };
+      if (v === 'read') {
+        readDone = true;
+        readOk = await readTell(g, def.read);
+        if (readOk) {
+          g.state.trial.readsOk++;
+          await g.run(def.readSuccess);
+        } else if (def.readFail) await g.run(def.readFail);
+        continue;
+      }
+      const lev = def.leverages.find((l) => `lev:${l.id}` === v)!;
+      used.add(lev.id);
+      await g.run(lev.script);
+      if (level < cap()) {
+        level++;
+        renderCard();
+        card.classList.remove('bump');
+        void card.offsetWidth;
+        card.classList.add('bump');
+        audio.sfx('success');
+        await g.say('strand', def.offers[level].line, { expr: 'annoyed' });
+      } else {
+        await g.say('strand', readOk ? "That's my floor, Mr. Vane. There is no basement." : 'No. That one doesn’t move me. This is where I am.', { expr: 'cold' });
+      }
+    }
+  } finally {
+    card.remove();
+  }
+}

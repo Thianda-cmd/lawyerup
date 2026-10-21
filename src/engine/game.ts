@@ -85,6 +85,8 @@ export class Game {
     angle: '' as string,
     exprs: {} as Partial<Record<CharId, string>>,
     cocounsel: true,
+    /** Pretrial hearing: the meter tracks the judge, not a jury. */
+    bench: false,
   };
   onTitle: () => void = () => {};
   onPause: () => void = () => {};
@@ -289,6 +291,7 @@ export class Game {
     this.hideDialogue();
     this.call(null);
     this.court.active = false;
+    this.court.bench = false;
     this.court.angle = '';
     this.recordEnabled = false;
     this.outfits = {};
@@ -600,6 +603,7 @@ export class Game {
   }
 
   leaveCourt(): void {
+    this.court.bench = false;
     this.court.active = false;
     this.state.trial.active = false;
     this.court.angle = '';
@@ -667,11 +671,12 @@ export class Game {
       gotcha: 'I SEE YOU.',
       sustained: 'SUSTAINED',
       overruled: 'OVERRULED',
+      granted: 'GRANTED',
     };
-    if (kind === 'sustained' || kind === 'overruled') {
+    if (kind === 'sustained' || kind === 'overruled' || kind === 'granted') {
       const s = el('div', `stamp stamp-${kind}`, labels[kind]);
       this.layers.fx.appendChild(s);
-      audio.sfx(kind === 'sustained' ? 'gavel' : 'stamp');
+      audio.sfx(kind === 'overruled' ? 'stamp' : 'gavel');
       this.shake(0.6);
       await this.wait(1100);
       s.classList.add('out');
@@ -871,16 +876,19 @@ export class Game {
       court = el('div', 'court-hud no-advance');
       hud.appendChild(court);
     }
-    const jurors = Array.from({ length: 12 }, (_, i) => {
+    const label = this.court.bench ? 'THE BENCH' : 'JURY';
+    const jurors = this.court.bench
+      ? `<span class="bench-icon"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="11" height="6" rx="1.5" transform="rotate(-35 8.5 7)"/><rect x="9" y="9" width="3" height="13" rx="1.5" transform="rotate(-35 10.5 15)"/></svg></span>`
+      : Array.from({ length: 12 }, (_, i) => {
       const threshold = 6 + i * 8;
-      return `<span class="juror ${t.jury > threshold ? 'acquit' : 'convict'}"><svg viewBox="0 0 20 24"><circle cx="10" cy="7" r="5.5"/><path d="M 1 24 Q 1 13 10 13 Q 19 13 19 24 Z"/></svg></span>`;
-    }).join('');
+          return `<span class="juror ${t.jury > threshold ? 'acquit' : 'convict'}"><svg viewBox="0 0 20 24"><circle cx="10" cy="7" r="5.5"/><path d="M 1 24 Q 1 13 10 13 Q 19 13 19 24 Z"/></svg></span>`;
+        }).join('');
     court.innerHTML = `
       <div class="hud-focus" title="Focus — spend it to Read a witness">${Array.from({ length: t.maxFocus }, (_, i) => `<span class="eye ${i < t.focus ? 'on' : ''}">◉</span>`).join('')}<label>FOCUS</label></div>
       <div class="hud-jury ${delta > 0 ? 'up' : delta < 0 ? 'down' : ''}" title="Jury sway — if it hits zero, the jury convicts">
         <div class="jurors">${jurors}</div>
         <div class="jury-bar"><div class="jury-fill" style="width:${t.jury}%"></div><div class="jury-mark"></div></div>
-        <label>JURY <b>${t.jury}</b>${delta ? `<span class="delta">${delta > 0 ? '+' : ''}${delta}</span>` : ''}</label>
+        <label>${label} <b>${t.jury}</b>${delta ? `<span class="delta">${delta > 0 ? '+' : ''}${delta}</span>` : ''}</label>
       </div>
       <div class="hud-patience" title="Judge's patience — run out and you're in contempt">${Array.from({ length: 3 }, (_, i) => `<span class="gavel ${i < t.patience ? 'on' : ''}"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="11" height="6" rx="1.5" transform="rotate(-35 8.5 7)"/><rect x="9" y="9" width="3" height="13" rx="1.5" transform="rotate(-35 10.5 15)"/></svg></span>`).join('')}<label>PATIENCE</label></div>`;
   }
@@ -918,12 +926,21 @@ export class Game {
     audio.music(null);
     audio.sfx('gavel');
     const verdict = e.reason === 'jury';
+    const bench = this.court.bench;
+    const defendant = String(this.state.vars.defendant ?? 'Corvin Mallory');
+    const kicker = verdict ? (bench ? 'THE COURT HAS RULED' : 'THE JURY HAS REACHED A VERDICT') : 'THE STORY ENDS HERE';
+    const title = verdict ? (bench ? 'DENIED' : 'GUILTY') : escapeHtml(e.detail || 'Case Closed');
+    const sub = verdict
+      ? bench
+        ? `You lost the judge. The motion is denied, and ${escapeHtml(defendant)} stays in a cell.`
+        : `You lost the room. ${escapeHtml(defendant)} is led away in handcuffs.`
+      : 'Not every road leads to the truth.';
     const box = el(
       'div',
       'gameover no-advance',
-      `<div class="go-kicker">${verdict ? 'THE JURY HAS REACHED A VERDICT' : 'THE STORY ENDS HERE'}</div>
-       <div class="go-title">${verdict ? 'GUILTY' : escapeHtml(e.detail || 'Case Closed')}</div>
-       <div class="go-sub">${verdict ? 'You lost the room. Corvin Mallory is led away in handcuffs.' : 'Not every road leads to the truth.'}</div>
+      `<div class="go-kicker">${kicker}</div>
+       <div class="go-title">${title}</div>
+       <div class="go-sub">${sub}</div>
        <div class="go-buttons"><button class="btn primary" data-v="retry">Retry from checkpoint</button><button class="btn" data-v="title">Return to title</button></div>`,
     );
     this.layers.overlay.appendChild(box);

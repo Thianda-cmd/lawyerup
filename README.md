@@ -4,8 +4,16 @@
 *The Mentalist*: a former Las Vegas "psychic" turned strip-mall defense attorney who wins cases by
 reading people.
 
-**Case 1, "The Vanishing Act," is fully playable** (about 45–75 minutes): a stage magician is accused of
-murdering his producer during the four minutes he "vanishes" in his signature illusion.
+Two cases are fully playable (pick either from **Case Select** on the title screen):
+
+- **Case 1, "The Vanishing Act"** (about an hour): a stage magician is accused of murdering his producer
+  during the four minutes he "vanishes" in his signature illusion.
+- **Case 2, "Chain of Custody"** (about two hours): Rosa's little brother is charged with drug-induced
+  homicide after a councilwoman's daughter dies of fentanyl, and a decorated narcotics sergeant has been
+  recycling "destroyed" evidence. Includes a suppression hearing, a plea negotiation, jury selection
+  against Ezra's old mentor, and a three-witness trial.
+
+Live build: https://lawyerup-three.vercel.app (Vercel project `lawyerup`, deployed from this repo).
 
 Every portrait, background, sound effect and music track is **generated in code at runtime**. The
 repo has no image or audio files.
@@ -24,6 +32,7 @@ Other scripts:
 | `npm run build` | Typecheck + production build to `dist/` |
 | `npm run build:single` | Build, then inline everything into one self-contained `dist/lawyerup.html` |
 | `npm test` | DSL unit tests + static validation of all case content |
+| `node dev/bot.mjs <dir> --fast [--case2]` | Playwright bot that plays a whole case (needs `PW_PATH`, optional `BOT_URL`) |
 | `npm run typecheck` | TypeScript only |
 
 ### Controls
@@ -43,6 +52,9 @@ Other scripts:
 | Cross-examination | `src/systems/court.ts` | Press, present contradictions, read the witness. Statements change as you break them. |
 | Jury & Patience | `src/engine/game.ts` | Jury sway (12 jurors, 0 = conviction) and the judge's patience (spent by risky Gambits). |
 | Closing argument | `src/systems/court.ts` | Back up each point of your summation with evidence. |
+| Motions | `src/systems/court.ts` | Build a motion to suppress from the grounds the hearing actually established. |
+| Plea negotiation | `src/systems/court.ts` | Use investigation findings as leverage; read the prosecutor to find her floor. |
+| Jury selection | `src/systems/voirDire.ts` | Question and read prospective jurors, spend strikes; the prosecution strikes too. |
 | Choices & stats | throughout | Integrity / Notoriety / Client Trust / Cash, a recess dilemma with a bad ending, verdict report card. |
 | Saves | `src/engine/save.ts` | Autosave at every checkpoint + 3 manual slots (localStorage). |
 

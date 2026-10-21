@@ -37,10 +37,17 @@ export const CHAR_IDS: readonly CharId[] = [
   'strand',
   'judge',
   'tino',
+  'teo',
+  'kessler',
+  'jojo',
+  'whitfield',
+  'nand',
+  'crane',
+  'ortega',
 ];
 const POSITIONS: readonly Pos[] = ['farleft', 'left', 'center', 'right', 'farright'];
 const STATS: readonly StatId[] = ['integrity', 'notoriety', 'money', 'trust'];
-const BURSTS: readonly BurstKind[] = ['objection', 'holdit', 'exhibit', 'gotcha', 'sustained', 'overruled'];
+const BURSTS: readonly BurstKind[] = ['objection', 'holdit', 'exhibit', 'gotcha', 'sustained', 'overruled', 'granted'];
 
 export class ScriptError extends Error {}
 

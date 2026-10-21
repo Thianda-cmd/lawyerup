@@ -3,6 +3,7 @@
  * gradients and a little SMIL/CSS animation (neon flicker, fans, lights).
  * `fg` is drawn in front of the characters (desks, glass, witness stands).
  */
+import { CASE2_BACKGROUNDS } from './backgrounds2';
 import { H, W, blinds, blur, cone, glow, linear, neon, palm, panels, radial, rng, skyline, stars, svg, text, vignette } from './bgkit';
 
 export type ParticleMode = 'dust' | 'rain' | 'embers' | 'none' | 'glitter';
@@ -547,4 +548,5 @@ export const BACKGROUNDS: Record<string, BgDef> = {
   void: { name: '', paint: voidBg, particles: 'embers' },
   read: { name: '', paint: readBg, particles: 'none' },
   black: { name: '', paint: black, particles: 'none' },
+  ...CASE2_BACKGROUNDS,
 };

@@ -6,7 +6,7 @@
 > cold-reading showmanship. And under every case, a long con that started ten years ago.
 
 This document holds the pitch, the cast, the systems and the season plan. **Everything here is a
-proposal.** The first case is written and playable. The rest is meant to be argued over and changed.
+proposal.** Cases 1 and 2 are written and playable. The rest is meant to be argued over and changed.
 
 ---
 
@@ -44,6 +44,10 @@ just to win?**
 | **Tino "Two-Phones" Reyes** | Fixer / informant | Ezra's Saul-style street contact. Everything costs money or a favor. |
 | **Silas Crane** | Season antagonist | Ezra's old manager, now a high-priced **jury consultant**. "Every jury has a tell." The dark mirror of Ezra. |
 | **Marcus Hale** | The ghost | Wrongly convicted eleven years ago, partly because of Ezra's act. The season's final case is his. |
+| **Teo Quintero** | Rosa's brother | Case 2's client, now the office's unpaid intern. |
+| **Sgt. Ray Kessler** | Case 2 antagonist | Decorated narcotics cop recycling "destroyed" evidence. Coached for years by Crane. |
+| **Councilwoman Diane Whitfield** | Grieving mother | Starts Case 2 demanding the maximum for Teo; ends it publishing her daughter's exposé. |
+| **Dr. Priya Nand / Ofc. Luis Ortega** | Insiders | The chemist and the rookie cop who each refuse to leave one thing out. |
 
 ---
 
@@ -127,20 +131,59 @@ All of these exist in code today (`src/systems/`).
 
 ---
 
-## 5. Season plan (proposal — change freely)
+## 5. Case 2 — *Chain of Custody* (playable)
+
+**Client:** Mateo "Teo" Quintero, 19, **Rosa's little brother**. Community college student, delivery driver,
+sells his own Adderall to classmates during finals (not a saint, not a dealer).
+**Victim:** Chloe Whitfield, 20, student journalist, daughter of Councilwoman Diane Whitfield (running for
+mayor on an anti-fentanyl platform).
+**Charge:** Drug-induced homicide: if you distribute a drug and someone dies, it's homicide, regardless of intent.
+
+### The truth (spoilers)
+- Chloe was eight months sober and writing "The Blue Pipeline," an exposé tracing campus fentanyl pills to
+  **Jonah "Jojo" Pratt**, who is secretly **CI-417**, the informant of **Sgt. Ray Kessler** (SQPD Narcotics,
+  Officer of the Year twice).
+- Kessler signs off on seized pills as "destroyed" (burn log, case #24-1187) and recycles them through Jojo.
+  Arrests of small fry keep his numbers up.
+- Chloe recorded Jojo bragging ("my guy's a cop, the evidence room's my warehouse") and told him it would run
+  Monday. Jojo called Kessler (11:52 PM). Kessler said "handle it." Jojo dissolved fentanyl in her drink and
+  planted half a pill in her purse.
+- Kessler grabbed the case, found "blues" and a $40 Venmo on Chloe's phone, and planted pills in Teo's car on a
+  pretext traffic stop. His bodycam started late. His rookie partner Ortega's camera didn't.
+- **The prestige:** Silas Crane, the prosecution's jury consultant, coached Kessler's testimony for years.
+  Chloe's notes had his initials. Crane fed Ezra hints ("ask him about the fire") so that Ezra would destroy
+  Kessler's credibility before Kessler could trade Crane for a deal. Ezra won Teo's freedom, and served
+  Crane's interests while doing it.
+
+### Realistic legal beats
+| Beat | Mechanic | What it teaches |
+|---|---|---|
+| Motion to suppress | Cross-examine the officer about the stop, then pick the legal grounds for the written motion | Fourth Amendment: a pretext stop, the smell of legal cannabis, consent that only appears at the hearing, "plain view" |
+| Plea negotiation | Wear the offer down with leverage from the investigation; read the prosecutor to reach her true floor; accept (alternate ending) or go to trial | Most cases end in a plea; leverage is evidence |
+| Jury selection | One question per juror, Reads on their faces, two strikes; the prosecution's consultant strikes too; one juror is a plant lying about police ties | Voir dire, peremptory strikes, hidden bias |
+| Trial | Chemist (chain of custody, die marks, gastric contents), informant (alibi GPS, party video, voice memo), sergeant (burner call, partner's bodycam, burn log, storage unit) | Brady material, informant reliability, evidence-room corruption, the Fifth Amendment |
+
+### Choices
+Promise Rosa vs. tell her the odds · Teo's Adderall: truth vs. bury it · Ortega: protect vs. pressure ·
+the storage unit: wait for a warrant vs. Tino's lockpicks · the opening gambit · ask Crane about "S.C."
+The plea offer, if accepted, ends the case early with its own ending.
+
+---
+
+## 6. Season plan (proposal — change freely)
 
 | # | Case | Hook | New mechanic / theme |
 |---|---|---|---|
-| 1 | **The Vanishing Act** | Magician accused of murder during his own disappearing act. | Core systems. The double. |
-| 2 | **Slip and Fall** | Ezra's most reliable *fake* injury client (he stages accidents for insurance money) is accused of a *real* hit-and-run. Ezra's own hands aren't clean. | **Plea bargaining**: negotiate with Strand under a timer. Saul-style moral choices with real consequences. |
-| 3 | **The Séance** | A celebrity medium is accused of poisoning a client mid-séance. Ezra has to expose cold reading in court without exposing himself. | **Voir dire / jury selection**: read twelve strangers before trial. Silas Crane is consulting for the prosecution. |
-| 4 | **House Rules** | A casino surveillance chief dies in a locked "eye in the sky" room. Every camera in Vegas saw nothing. | **Surveillance review**: scrub footage timelines. Return to Vegas, Ezra's past catches up. |
-| 5 | **People v. Marcus Hale** | The retrial. Ezra must prove his own act helped convict an innocent man, and that Silas Crane engineered it. | **Ezra testifies.** The cross-examination is of *you*. Integrity vs. Notoriety decides how. |
+| 1 | **The Vanishing Act** ✅ | Magician accused of murder during his own disappearing act. | Core systems. The double. |
+| 2 | **Chain of Custody** ✅ | Rosa's brother charged with drug-induced homicide; a narcotics sergeant recycles "destroyed" pills. | Suppression hearing, plea negotiation, jury selection vs. Crane. |
+| 3 | **The Séance** | A celebrity medium is accused of poisoning a client mid-séance. Ezra has to expose cold reading in court without exposing himself. | Ezra's past goes public. Crane consults for the defense this time. |
+| 4 | **House Rules** | A casino surveillance chief dies in a locked "eye in the sky" room. Every camera in Vegas saw nothing. | Surveillance timelines. Return to Vegas. |
+| 5 | **People v. Marcus Hale** | The parole hearing and retrial. Ezra must prove his own act helped convict an innocent man, and that Silas Crane engineered it. | **Ezra testifies.** The cross-examination is of *you*. Integrity vs. Notoriety decides how. |
 
 ### Open questions for the team
-- How dark should the Silas Crane arc go? Is he a killer, or "just" a manipulator who ruins lives legally?
-- Should Strand become an ally by Case 5? (Current lean: yes, reluctantly, because she's honest.)
-- Branching: today choices change dialogue and the verdict report. Do we want truly divergent case
-  outcomes (e.g. Case 2 can end in a guilty plea that carries into Case 5)?
-- Art direction: keep the fully procedural vector style, or bring in an illustrator and swap the
-  portrait renderer for hand-drawn sprites? The engine supports both. See README → *Swapping in real art*.
+- How dark should the Silas Crane arc go? After Case 2 he is clearly manipulating events. Is he a killer, or
+  "just" a man who ruins lives legally?
+- Strand is now an uneasy ally. Should she prosecute Hale's retrial against Ezra, or switch sides?
+- Should Case 2's choices (warrant vs. Tino, Ortega) carry into Case 3? Kessler's lawyer attacking Tino's
+  photos would be a natural Case 3 subplot.
+- Art direction: keep the fully procedural vector style, or bring in an illustrator? The engine supports both.

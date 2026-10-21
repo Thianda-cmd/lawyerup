@@ -958,7 +958,6 @@ export const epilogue: SceneFn = async (g) => {
     ezra[serious]: Then clear it harder.
     @fade out 900
   `);
-  await g.caseCard('CASE 1 — CLOSED', 'To Be Continued', 'Case 2: “Slip and Fall” — coming soon');
-  g.onTitle();
-  return null;
+  await g.caseCard('CASE 1 — CLOSED', 'Three Weeks Later', 'Case 2: Chain of Custody');
+  return 'c2_cold_open';
 };

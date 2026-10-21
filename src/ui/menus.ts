@@ -118,6 +118,31 @@ export function openCredits(g: Game): Promise<void> {
   );
 }
 
+const CASES = [
+  { scene: 'c1_cold_open', num: 'CASE 1', title: 'The Vanishing Act', blurb: 'A stage magician is accused of murder during the four minutes he vanishes in his own act.' },
+  { scene: 'c2_cold_open', num: 'CASE 2', title: 'Chain of Custody', blurb: "Rosa's little brother is charged with drug-induced homicide after a councilwoman's daughter dies of fentanyl." },
+];
+
+function openCaseSelect(g: Game): Promise<string | null> {
+  let chosen: string | null = null;
+  return modal(
+    g,
+    'wide',
+    `<h2>Case Select</h2>
+     <div class="case-list">${CASES.map((c) => `<button class="case-pick" data-scene="${c.scene}"><span>${c.num}</span><b>${escapeHtml(c.title)}</b><small>${escapeHtml(c.blurb)}</small></button>`).join('')}</div>
+     <p style="margin:4px 0 0;color:var(--ink-dim);font-size:16px;text-align:center">Cases continue one story. Case 2 makes the most sense after Case 1, but each stands on its own.</p>
+     <button class="btn" data-close style="text-align:center">Back</button>`,
+    (root, close) => {
+      root.addEventListener('click', (e) => {
+        const b = (e.target as HTMLElement).closest<HTMLButtonElement>('button');
+        if (!b) return;
+        if (b.dataset.scene) chosen = b.dataset.scene;
+        close();
+      });
+    },
+  ).then(() => chosen);
+}
+
 export function loadSlot(g: Game, slot: Slot): void {
   const d = readSave(slot);
   if (!d) return;
@@ -194,11 +219,12 @@ export function showTitle(g: Game, first = false): void {
      <div class="title-menu">
        ${save ? `<button class="btn primary" data-a="continue">Continue <small style="opacity:.7;font-size:16px">— ${escapeHtml(save.data.label)}</small></button>` : ''}
        <button class="btn ${save ? '' : 'primary'}" data-a="new">New Game</button>
+       <button class="btn" data-a="cases">Case Select</button>
        <button class="btn" data-a="load">Load Game</button>
        <button class="btn" data-a="settings">Settings</button>
        <button class="btn" data-a="credits">Credits</button>
      </div>
-     <div class="title-foot">Case 1: The Vanishing Act • Every pixel and note generated in code</div>
+     <div class="title-foot">Case 1: The Vanishing Act • Case 2: Chain of Custody • Every pixel and note generated in code</div>
      ${first ? '<div class="click-to-start">CLICK TO BEGIN</div>' : ''}`,
   );
   g.layers.overlay.appendChild(screen);
@@ -218,6 +244,13 @@ export function showTitle(g: Game, first = false): void {
       screen.remove();
       g.stage.classList.remove('on-title');
       g.newGame(START_SCENE);
+    } else if (a === 'cases') {
+      const scene = await openCaseSelect(g);
+      if (scene) {
+        screen.remove();
+        g.stage.classList.remove('on-title');
+        g.newGame(scene);
+      }
     } else if (a === 'continue' && save) {
       loadSlot(g, save.slot);
     } else if (a === 'load') {

@@ -9,13 +9,20 @@ export type CharId =
   | 'brandt'
   | 'strand'
   | 'judge'
-  | 'tino';
+  | 'tino'
+  | 'teo'
+  | 'kessler'
+  | 'jojo'
+  | 'whitfield'
+  | 'nand'
+  | 'crane'
+  | 'ortega';
 
 export type Pos = 'farleft' | 'left' | 'center' | 'right' | 'farright';
 
 export type StatId = 'integrity' | 'notoriety' | 'money' | 'trust';
 
-export type BurstKind = 'objection' | 'holdit' | 'exhibit' | 'gotcha' | 'sustained' | 'overruled';
+export type BurstKind = 'objection' | 'holdit' | 'exhibit' | 'gotcha' | 'sustained' | 'overruled' | 'granted';
 
 export type Cmd =
   | { t: 'say'; who: CharId | null; name?: string; expr?: string; text: string; thought?: boolean }
