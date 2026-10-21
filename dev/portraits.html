@@ -1,0 +1,16 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>Portrait sheet</title>
+<link rel="stylesheet" href="/src/styles/portrait.css"><style>body{background:#2a2335;margin:0;display:flex;flex-wrap:wrap;gap:6px;padding:6px;font:12px sans-serif;color:#ddd}
+.cell{width:240px;text-align:center}.cell svg{width:240px;height:360px;background:linear-gradient(#4a3f5c,#2a2335)}</style></head>
+<body><script type="module">
+import { portraitSVG } from '/src/art/cast.ts';
+const q = new URLSearchParams(location.search);
+const ids = (q.get('ids') ?? 'ezra,rosa,corvin,iris,benny,brandt,strand,judge,tino').split(',');
+const exprs = (q.get('e') ?? 'neutral').split(',');
+const outfit = q.get('o') ?? undefined;
+for (const id of ids) for (const e of exprs) {
+  const d = document.createElement('div'); d.className='cell';
+  d.innerHTML = portraitSVG(id, e, outfit) + `<div>${id} / ${e}</div>`;
+  document.body.appendChild(d);
+}
+</script></body></html>
