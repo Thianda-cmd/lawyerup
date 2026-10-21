@@ -13,6 +13,8 @@ const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
 const errors = [];
 page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
 page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
+page.on('crash', () => console.log('PAGE CRASHED'));
+browser.on('disconnected', () => console.log('BROWSER DISCONNECTED'));
 await page.goto(process.env.BOT_URL ?? 'http://localhost:5173/', { waitUntil: 'networkidle' });
 await page.evaluate(() => localStorage.clear());
 await page.reload({ waitUntil: 'networkidle' });
@@ -55,7 +57,8 @@ let lastText = '';
 let shots = 0;
 let invPhase = 'examine';
 const ceVisits = {};
-const log = [];
+// Log lines stream to stdout as they happen, so a crash still leaves a trail.
+const log = { push: (line) => console.log(line) };
 const shot = async (name) => { await page.screenshot({ path: `${out}/${String(++shots).padStart(2, '0')}-${name}.png` }); };
 
 const snap = () => page.evaluate(() => {
@@ -130,7 +133,7 @@ for (let tick = 0; tick < 12000; tick++) {
   await page.waitForTimeout(fast ? 25 : 60);
   try {
     const s = await snap();
-    if (s.scene && !seenScenes.has(s.scene)) { seenScenes.add(s.scene); log.push(`== scene ${s.scene} (jury ${s.jury})`); console.log(`scene ${s.scene} tick ${tick}`); await shot(s.scene); }
+    if (s.scene && !seenScenes.has(s.scene)) { seenScenes.add(s.scene); log.push(`== scene ${s.scene} (jury ${s.jury}) tick ${tick}`); await shot(s.scene); }
     if (s.gameover) { log.push('GAME OVER: ' + s.gameover.replace(/\n/g, ' ')); await shot('gameover'); break; }
     if (s.title && tick > 50) { log.push('back at title'); await shot('end-title'); break; }
     if (s.report) { await shot('report'); log.push('report shown'); await page.click('[data-ok]'); continue; }
@@ -260,6 +263,5 @@ for (let tick = 0; tick < 12000; tick++) {
 const final = await snap();
 log.push(`final scene=${final.scene} jury=${final.jury}`);
 log.push(await page.evaluate(() => JSON.stringify({ trial: window.__game.state.trial, stats: window.__game.state.stats })));
-console.log(log.join('\n'));
 console.log(errors.length ? 'ERRORS:\n' + errors.join('\n') : 'no errors');
 await browser.close();
