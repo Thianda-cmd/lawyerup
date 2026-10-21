@@ -166,11 +166,20 @@ async function examine(g: Game, def: InvestigationDef, loc: Location): Promise<v
   showPeople(g, loc);
 }
 
-async function pickPerson(g: Game, loc: Location, prompt: string): Promise<Person | null> {
+async function pickPerson(g: Game, loc: Location, prompt: string, def?: InvestigationDef): Promise<Person | null> {
   const ppl = peopleHere(g, loc);
   if (ppl.length === 1) return ppl[0];
+  // When talking, flag who still has something new to say.
+  const fresh = (p: Person) => p.topics.some((t) => (!t.when || t.when(g)) && !g.seen(key(def!, 'topic', p.char, t.id)));
   const choice = await g.choose<CharId | null>(
-    [...ppl.map((p) => ({ label: CHARACTERS[p.char].full, value: p.char as CharId | null })), { label: 'Never mind', value: null }],
+    [
+      ...ppl.map((p) => ({
+        label: CHARACTERS[p.char].full,
+        value: p.char as CharId | null,
+        ...(def ? (fresh(p) ? { tag: 'NEW' } : { done: true }) : {}),
+      })),
+      { label: 'Never mind', value: null },
+    ],
     { prompt },
   );
   g.hideDialogue();
@@ -178,7 +187,7 @@ async function pickPerson(g: Game, loc: Location, prompt: string): Promise<Perso
 }
 
 async function talk(g: Game, def: InvestigationDef, loc: Location): Promise<void> {
-  const person = await pickPerson(g, loc, 'Who should I talk to?');
+  const person = await pickPerson(g, loc, 'Who should I talk to?', def);
   if (!person) return;
   for (;;) {
     const topics = person.topics.filter((t) => !t.when || t.when(g));

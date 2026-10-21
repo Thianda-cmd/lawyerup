@@ -1,8 +1,8 @@
 /// <reference types="node" />
 /**
  * Static checks over the written content, so typos fail the build instead of
- * a playthrough: unknown expressions, evidence ids, backgrounds, music, sfx,
- * scene links and deduction recipes.
+ * a playthrough: unknown expressions, evidence ids, items nobody hands out,
+ * backgrounds, music, sfx, scene links and deduction recipes.
  */
 import { readFileSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
@@ -68,6 +68,16 @@ describe('case content', () => {
       }
     }
     expect(bad).toEqual([]);
+  });
+
+  it('hands out every evidence item and profile somewhere', () => {
+    const given = new Set([
+      ...all(/@(?:evidence|profile) (\w+)/g).map(({ m }) => m[1]),
+      ...all(/give(?:Evidence|Profile)\('(\w+)'/g).map(({ m }) => m[1]),
+      ...CONTENT.recipes.map((r) => r.result),
+    ]);
+    const never = [...Object.keys(CONTENT.evidence), ...Object.keys(CONTENT.profiles)].filter((id) => !given.has(id));
+    expect(never).toEqual([]);
   });
 
   it('uses real backgrounds, music and sound effects', () => {

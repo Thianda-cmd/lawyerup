@@ -40,6 +40,7 @@ export const trialOpen: SceneFn = async (g) => {
     ezra: Mentalist. Psychics claim it's magic. I just pay attention.
     strand[smug]: Then pay attention to this. I have tried forty-one cases. I have won forty-one cases.
     strand[cold]: Your client is going to be number forty-two.
+    @profile p_strand
     @hide strand
     ~ Helena Strand. Undefeated. And she's not bluffing — I read people for a living, and that woman believes every word she says.
     rosa[serious]: Ezra. It's time.

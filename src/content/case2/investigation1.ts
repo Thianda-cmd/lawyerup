@@ -834,10 +834,11 @@ const daOffice: Location = {
           label: 'Discovery',
           script: async (g) => {
             await g.run(s`
-              strand[cold]: Everything the People have, as required. Phone extraction, inventory of the vehicle, booking records. I disclose everything, Mr. Vane. Unlike some prosecutors.
+              strand[cold]: Everything the People have, as required. Phone extraction, Venmo subpoena return, inventory of the vehicle, booking records. I disclose everything, Mr. Vane. Unlike some prosecutors.
               strand: The full extraction is on page forty. Read it all. I always do.
             `);
             await g.giveEvidence('c2_texts');
+            await g.giveEvidence('c2_venmo');
             await g.giveEvidence('c2_inventory');
             await g.run(s`
               ~ Page forty. "jk lol. i dont touch that stuff. addy only." She handed me the denial Kessler cut out of his affidavit.

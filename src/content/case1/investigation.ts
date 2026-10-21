@@ -498,6 +498,7 @@ const corridor: Location = {
     brandt[smug]: The bus bench guy. "Need a lawyer? Need Vane." My wife laughs every time we drive past it.
     ezra: I'm glad I bring joy into your marriage, Detective.
     brandt[neutral]: Lyle Brandt, Homicide. Twenty-eight years. I've seen a hundred guys like you, Vane. Your client did it. Save yourself the embarrassment.
+    @profile p_brandt
   `,
   hotspots: [
     {

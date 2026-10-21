@@ -1,12 +1,15 @@
 // Plays a case start to finish in a real browser and reports what happened.
-// usage: PW_PATH=... BOT_URL=... node dev/bot.mjs <shotdir> [--fast] [--case2] [--from=scene]
+// usage: PW_PATH=... BOT_URL=... node dev/bot.mjs <shotdir> [--fast] [--case2] [--from=scene] [--resume=cp.json]
+// Every new scene writes its checkpoint to <shotdir>/cp-<scene>.json; --resume picks up from one.
 import { createRequire } from 'module';
+import { readFileSync, writeFileSync } from 'fs';
 const require = createRequire(import.meta.url);
 const { chromium } = require(process.env.PW_PATH);
 const out = process.argv[2];
 const fast = process.argv.includes('--fast');
 const case2 = process.argv.includes('--case2');
 const from = (process.argv.find((a) => a.startsWith('--from=')) ?? '').slice(7);
+const resume = (process.argv.find((a) => a.startsWith('--resume=')) ?? '').slice(9);
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
@@ -107,7 +110,14 @@ async function deduce() {
 }
 
 if (fast) await page.keyboard.down('Control');
-if (from) {
+if (resume) {
+  await page.evaluate((cp) => {
+    const g = window.__game;
+    document.querySelector('.title-screen')?.remove();
+    g.stage.classList.remove('on-title');
+    g.load(cp.scene, cp.state);
+  }, JSON.parse(readFileSync(resume, 'utf8')));
+} else if (from) {
   await page.evaluate((scene) => {
     const g = window.__game;
     document.querySelector('.title-screen')?.remove();
@@ -133,7 +143,11 @@ for (let tick = 0; tick < 12000; tick++) {
   await page.waitForTimeout(fast ? 25 : 60);
   try {
     const s = await snap();
-    if (s.scene && !seenScenes.has(s.scene)) { seenScenes.add(s.scene); log.push(`== scene ${s.scene} (jury ${s.jury}) tick ${tick}`); await shot(s.scene); }
+    if (s.scene && !seenScenes.has(s.scene)) { seenScenes.add(s.scene); log.push(`== scene ${s.scene} (jury ${s.jury}) tick ${tick}`); await shot(s.scene);
+      writeFileSync(`${out}/cp-${s.scene}.json`, await page.evaluate(() => JSON.stringify(window.__game.cp)));
+    }
+    if (tick % 300 === 299) log.push(`.. tick ${tick} loc=${s.loc} inv=${s.inv} spots=${s.spots} choices=${s.choices.map((c) => c.label + (c.done ? '✓' : '') + (c.disabled ? '✗' : '')).join(' | ')} text=${s.text.slice(0, 60)}`);
+    if (tick % 600 === 599) log.push('.. have ' + (await page.evaluate(() => [...window.__game.state.evidence, ...window.__game.state.profiles].join(','))));
     if (s.gameover) { log.push('GAME OVER: ' + s.gameover.replace(/\n/g, ' ')); await shot('gameover'); break; }
     if (s.title && tick > 50) { log.push('back at title'); await shot('end-title'); break; }
     if (s.report) { await shot('report'); log.push('report shown'); await page.click('[data-ok]'); continue; }
