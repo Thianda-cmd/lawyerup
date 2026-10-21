@@ -17,6 +17,9 @@ function fit(): void {
 window.addEventListener('resize', fit);
 fit();
 
+const hint = document.querySelector<HTMLButtonElement>('.rotate-hint');
+hint?.addEventListener('click', () => (hint.hidden = true));
+
 const game = new Game(stage, CONTENT);
 mountHudButtons(game);
 showTitle(game, true);
