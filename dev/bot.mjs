@@ -13,9 +13,11 @@ const resume = (process.argv.find((a) => a.startsWith('--resume=')) ?? '').slice
 
 const browser = await chromium.launch();
 const page = await browser.newPage({ viewport: { width: 1600, height: 900 } });
+page.setDefaultTimeout(5000); // a stale snapshot's click should fail fast and re-snap
 const errors = [];
-page.on('pageerror', (e) => errors.push('pageerror: ' + e.message));
-page.on('console', (m) => { if (m.type() === 'error') errors.push('console: ' + m.text()); });
+const report = (msg) => { errors.push(msg); console.log('PAGE ERROR ' + msg); };
+page.on('pageerror', (e) => report('pageerror: ' + e.message));
+page.on('console', (m) => { if (m.type() === 'error') report('console: ' + m.text()); });
 page.on('crash', () => console.log('PAGE CRASHED'));
 browser.on('disconnected', () => console.log('BROWSER DISCONNECTED'));
 await page.goto(process.env.BOT_URL ?? 'http://localhost:5173/', { waitUntil: 'networkidle' });
@@ -53,7 +55,8 @@ const CHOICE_PREFS = [
   'Ask him about Chloe', 'File the motion', 'pick a jury', 'We’re ready',
 ];
 const SKIP = ['Back', 'Never mind', 'Not right now', 'Stay here', 'Not yet.', 'Not yet. Keep digging.'];
-let moveCounter = 0;
+const visited = new Set();
+const examined = new Set();
 const usedPresent = new Set();
 const usedReads = new Set();
 let lastText = '';
@@ -80,6 +83,9 @@ const snap = () => page.evaluate(() => {
     jury: window.__game?.state.trial.jury, scene: window.__game?.sceneId, focus: window.__game?.state.trial.focus,
   };
 });
+
+// Labels can contain quotes, so match by text with a locator instead of a CSS string.
+const clickChoice = (text) => page.locator('.choices .choice', { hasText: text }).first().click();
 
 async function presentItem(id) {
   if (id === '@stash') id = (await page.evaluate(() => window.__game.has('c2_stash'))) ? 'c2_stash' : 'c2_photos';
@@ -166,7 +172,7 @@ for (let tick = 0; tick < 12000; tick++) {
       log.push('motion filed');
       continue;
     }
-    if (s.voir) {
+    if (s.voir && !s.read) {
       const t = s.voirBtns.map((b) => b.t);
       await page.waitForTimeout(380);
       if (t.includes('Begin the trial')) { await shot('voir-summary'); await page.click('.voir-btn'); continue; }
@@ -227,11 +233,14 @@ for (let tick = 0; tick < 12000; tick++) {
       continue;
     }
     if (s.examine) {
-      if (s.spots.length) await page.click(`.spot[data-id="${s.spots[0]}"]`);
-      else await page.click('.examine-back');
+      // each spot once per look; "again" spots stay unseen until their condition changes
+      const spot = s.spots.find((id) => !examined.has(id));
+      if (spot) { examined.add(spot); await page.click(`.spot[data-id="${spot}"]`); }
+      else { examined.clear(); await page.click('.examine-back'); }
       continue;
     }
     if (s.inv.length) {
+      if (s.loc) visited.add(s.loc);
       if (s.inv.includes('finish')) { await deduce(); await page.click('.inv-btn[data-a=finish]'); continue; }
       if (invPhase === 'examine') { invPhase = 'talk'; await page.click('.inv-btn[data-a=examine]'); continue; }
       if (invPhase === 'talk') { invPhase = 'move'; if (s.inv.includes('talk')) { await page.click('.inv-btn[data-a=talk]'); continue; } }
@@ -244,9 +253,11 @@ for (let tick = 0; tick < 12000; tick++) {
       await page.waitForTimeout(420);
       if (invPhase === 'pickmove') {
         const opts = s.choices.filter((c) => !SKIP.includes(c.label));
-        const pick = opts[moveCounter++ % Math.max(1, opts.length)]?.label ?? 'Stay here';
+        const fresh = opts.filter((c) => !visited.has(c.label));
+        const pool = fresh.length ? fresh : opts;
+        const pick = pool[Math.floor(Math.random() * pool.length)]?.label ?? 'Stay here';
         invPhase = 'examine';
-        await page.click(`.choice:has-text("${pick.slice(0, 40)}")`);
+        await clickChoice(pick.slice(0, 40));
         continue;
       }
       // plea negotiation: use every leverage, read once, then reject
@@ -254,23 +265,24 @@ for (let tick = 0; tick < 12000; tick++) {
         const lev = s.choices.find((c) => !c.disabled && !c.done && !c.label.startsWith('Take the deal') && !c.label.startsWith('Reject'));
         const pick = lev?.label ?? labels.find((l) => l.startsWith('Reject'));
         log.push('negotiate: ' + pick);
-        await page.click(`.choice:has-text("${pick.slice(0, 40)}")`);
+        await clickChoice(pick.slice(0, 40));
         continue;
       }
       const warrant = s.choices.find((c) => c.label.startsWith('Call Brandt. Wait'));
-      if (warrant?.disabled) { await page.click('.choice:has-text("Not yet.")'); continue; }
+      if (warrant?.disabled) { await clickChoice('Not yet.'); continue; }
       const pref = CHOICE_PREFS.find((p) => s.choices.some((c) => c.label.includes(p) && !c.disabled));
-      if (pref) { log.push('choose: ' + pref); await page.click(`.choice:has-text("${pref}")`); continue; }
+      if (pref) { log.push('choose: ' + pref); await clickChoice(pref); continue; }
       const undone = s.choices.find((c) => !c.done && !c.disabled && !SKIP.includes(c.label));
-      if (undone) { await page.click(`.choice:has-text("${undone.label.slice(0, 30)}")`); continue; }
+      if (undone) { await clickChoice(undone.label.slice(0, 30)); continue; }
       const back = s.choices.find((c) => SKIP.includes(c.label));
-      await page.click(`.choice:has-text("${(back?.label ?? labels[0]).slice(0, 30)}")`);
+      await clickChoice((back?.label ?? labels[0]).slice(0, 30));
       continue;
     }
     if (!s.dlgHidden) lastText = s.text || lastText;
     await page.mouse.click(800, 450);
   } catch (e) {
     log.push('tick error: ' + e.message.split('\n')[0]);
+    if (clickErrors === 0) await shot('tick-error').catch(() => {});
     if (++clickErrors > 20) { await shot('errors'); break; }
   }
 }

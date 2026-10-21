@@ -151,6 +151,7 @@ export async function voirDire(g: Game, def: VoirDireDef): Promise<VoirDireResul
     }
 
     // summary
+    g.hideDialogue();
     const sway = Math.max(30, Math.min(70, 50 + kept.reduce((s, j) => s + j.bias, 0)));
     root.innerHTML = `<div class="voir-summary">
       <div class="voir-kicker">THE JURY IS SEATED</div>

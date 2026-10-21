@@ -288,6 +288,7 @@ const dorm: Location = {
     {
       id: 'laptop',
       label: "Chloe's laptop",
+      again: (g) => g.flag('c2_password') && !g.has('c2_memo'),
       rect: [220, 440, 200, 120],
       script: async (g) => {
         if (!g.flag('c2_password')) {

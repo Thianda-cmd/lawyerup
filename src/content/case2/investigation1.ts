@@ -173,6 +173,7 @@ const office: Location = {
     {
       id: 'laptop',
       label: "Rosa's laptop",
+      again: (g) => g.has('p_teo') && !g.has('c2_dashgo'),
       rect: [560, 640, 260, 120],
       script: async (g) => {
         if (!g.has('p_teo')) {

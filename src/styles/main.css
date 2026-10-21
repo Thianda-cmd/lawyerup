@@ -478,6 +478,7 @@ button { font-family: inherit; color: inherit; }
 .voir-summary { position: absolute; inset: 60px 60px 60px; padding: 30px; background: rgba(12, 10, 20, 0.96); border: 2px solid var(--gold-dim); border-radius: 22px; display: flex; flex-direction: column; align-items: center; gap: 18px; }
 .voir-summary .voir-kicker { color: var(--gold); font-size: 18px; }
 .voir-summary .voir-actions { width: 420px; }
+.voir-summary .voir-btn { align-items: center; justify-content: center; text-align: center; }
 .voir-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 14px; width: 100%; }
 .vs-juror { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 12px 8px; border-radius: 14px; background: rgba(255, 255, 255, 0.05); border: 2px solid rgba(255, 255, 255, 0.1); text-align: center; }
 .vs-face { width: 140px; height: 140px; overflow: hidden; border-radius: 12px; background: radial-gradient(circle at 50% 40%, #3a3050, #15111e); position: relative; }

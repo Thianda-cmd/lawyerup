@@ -32,7 +32,7 @@ Other scripts:
 | `npm run build` | Typecheck + production build to `dist/` |
 | `npm run build:single` | Build, then inline everything into one self-contained `dist/lawyerup.html` |
 | `npm test` | DSL unit tests + static validation of all case content |
-| `node dev/bot.mjs <dir> --fast [--case2]` | Playwright bot that plays a whole case (needs `PW_PATH`, optional `BOT_URL`) |
+| `node dev/bot.mjs <dir> --fast [--case2] [--resume=<dir>/cp-<scene>.json]` | Playwright bot that plays a whole case and saves a checkpoint per scene (needs `PW_PATH`, optional `BOT_URL`) |
 | `npm run typecheck` | TypeScript only |
 
 ### Controls
@@ -66,11 +66,11 @@ Story bible, cast, system design and the proposed five-case season arc: **[docs/
 src/
   engine/      runtime: Game (stage, dialogue, court camera, flow), DSL, audio synth, state, saves
   art/         procedural art: portrait rig + cast, painted SVG backgrounds, icons, particles
-  systems/     investigation, cross-exam/objections/closing, the Read minigame
+  systems/     investigation, cross-exam/objections/closing/motions/plea deals, voir dire, the Read minigame
   ui/          court record + deduction board, menus (title, pause, save/load, settings, backlog)
-  content/     characters, legal handbook, and case1/ (data, prologue, investigation, trial)
+  content/     characters, legal handbook, case1/ and case2/ (data, prologue, investigations, trial)
   styles/      all CSS
-dev/           preview pages + Playwright scripts (bot.mjs plays Case 1 end-to-end)
+dev/           preview pages + Playwright scripts (bot.mjs plays either case end-to-end)
 ```
 
 ## Writing scenes
